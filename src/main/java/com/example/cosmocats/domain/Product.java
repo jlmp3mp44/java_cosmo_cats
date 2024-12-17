@@ -8,7 +8,6 @@ import lombok.*;
 
 @Data
 @Builder
-@Entity
 @Table(name = "products")
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @AllArgsConstructor
