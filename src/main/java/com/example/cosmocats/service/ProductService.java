@@ -22,22 +22,18 @@ public class ProductService {
     }
 
     // Basic product operations - controlled by feature.products.enabled
-    @FeatureToggle
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    @FeatureToggle
     public Optional<Product> getProduct(Long id) {
         return productRepository.findById(id);
     }
 
-    @FeatureToggle
     public Product createProduct(Product product) {
         return productRepository.save(product);
     }
 
-    @FeatureToggle
     public Product updateProduct(Long id, Product product) {
         if (!productRepository.existsById(id)) {
             throw new IllegalArgumentException("Product not found");
@@ -46,19 +42,16 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @FeatureToggle
     public boolean deleteProduct(Long id) {
         productRepository.deleteById(id);
         return true;
     }
 
     // Detailed product operations - controlled by feature.productDetails.enabled
-    @FeatureToggle
     public List<Product> getProductsBelowPrice(BigDecimal price) {
         return productRepository.findByPriceLessThan(price);
     }
 
-    @FeatureToggle
     public Product updateStock(Long id, int quantity) {
         Product product = productRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -66,7 +59,6 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @FeatureToggle
     public String getProductDetails(Long id) {
         Product product = productRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Product not found"));

@@ -5,6 +5,8 @@ import com.example.cosmocats.model.Product;
 import com.example.cosmocats.service.ProductService;
 import jakarta.validation.Valid;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +16,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-  @Autowired
-  private ProductService productService;
+  private final ProductService productService;
 
   @PostMapping
   public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
