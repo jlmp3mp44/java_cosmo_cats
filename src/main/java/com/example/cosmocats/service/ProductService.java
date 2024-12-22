@@ -13,7 +13,7 @@ import java.util.Optional;
 @Service
 @Transactional
 public class ProductService {
-    
+
     private final ProductRepository productRepository;
 
     @Autowired
@@ -47,8 +47,9 @@ public class ProductService {
     }
 
     @FeatureToggle
-    public void deleteProduct(Long id) {
+    public boolean deleteProduct(Long id) {
         productRepository.deleteById(id);
+        return true;
     }
 
     // Detailed product operations - controlled by feature.productDetails.enabled
@@ -70,12 +71,17 @@ public class ProductService {
         Product product = productRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         return String.format("Product: %s, Description: %s, Price: %s, Stock: %d",
-            product.getName(), product.getDescription(), 
+            product.getName(), product.getDescription(),
             product.getPrice(), product.getStockQuantity());
     }
 
     // This method is always available (no feature toggle)
     public String getServiceStatus() {
         return "Product service is operational";
+    }
+
+    public Optional<Product> getProductById(Long id) {
+        Optional<Product> product = productRepository.findById(id);
+        return product;
     }
 }
