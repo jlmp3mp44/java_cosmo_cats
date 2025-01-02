@@ -1,8 +1,8 @@
 package com.example.cosmocats.service;
 
-import com.example.cosmocats.featuretoggle.exception.FeatureNotAvailableException;
-import com.example.cosmocats.model.Product;
+import com.example.cosmocats.domain.Product;
 import com.example.cosmocats.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,71 +11,100 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+public class ProductServiceTest {
 
     @Mock
-    private ProductRepository productRepository;
+    private ProductRepository productEntityRepository;
 
     @InjectMocks
     private ProductService productService;
 
-    private Product testProduct;
+    private Product product;
 
     @BeforeEach
-    void setUp() {
-        testProduct = new Product();
-        testProduct.setId(1L);
-        testProduct.setName("Test Product");
-        testProduct.setPrice(BigDecimal.valueOf(99.99));
-        testProduct.setStockQuantity(10);
+    public void setUp() {
+
+        product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(BigDecimal.valueOf(100.0))
+                .build();
     }
 
     @Test
-    void getAllProducts_WhenFeatureEnabled_ShouldReturnProducts() {
-        // Arrange
-        List<Product> expectedProducts = Arrays.asList(testProduct);
-        when(productRepository.findAll()).thenReturn(expectedProducts);
+    public void testCreateProduct() {
+        when(productEntityRepository.create(any(Product.class))).thenReturn(product);
 
-        // Act
-        List<Product> actualProducts = productService.getAllProducts();
+        var createdProduct = productService.createProduct(product);
 
-        // Assert
-        assertEquals(expectedProducts, actualProducts);
-        verify(productRepository).findAll();
+        assertNotNull(createdProduct);
+        assertEquals(product.getName(), createdProduct.getName());
+        assertEquals(product.getPrice(), createdProduct.getPrice());
+        verify(productEntityRepository, times(1)).create(any(Product.class));
     }
 
     @Test
-    void getProduct_WhenFeatureEnabled_ShouldReturnProduct() {
-        // Arrange
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+    public void testFindById() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        // Act
-        Optional<Product> result = productService.getProduct(1L);
+        var foundProductDTO = productService.findById(1L);
 
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(testProduct, result.get());
+        assertNotNull(foundProductDTO);
+        assertThat(foundProductDTO).isPresent();
+        assertEquals("Test Product", foundProductDTO.get().getName());
+        assertEquals(BigDecimal.valueOf(100.0), foundProductDTO.get().getPrice());
     }
 
     @Test
-    void createProduct_WhenFeatureEnabled_ShouldCreateProduct() {
-        // Arrange
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+    public void testFindByIdNotFound() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Act
-        Product created = productService.createProduct(testProduct);
+        assertThrows(EntityNotFoundException.class, () -> productService.findById(1L));
+    }
 
-        // Assert
-        assertNotNull(created);
-        assertEquals(testProduct.getName(), created.getName());
-        verify(productRepository).save(testProduct);
+    @Test
+    public void testUpdateProduct() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productEntityRepository.update(anyLong(), any(Product.class))).thenReturn(product);
+
+        var updatedProduct = new Product("Updated Product", BigDecimal.valueOf(150.0));
+
+        var resultingProduct = productService.updateProduct(1L, updatedProduct);
+
+        assertNotNull(resultingProduct);
+        assertEquals(updatedProduct.getName(), resultingProduct.getName());
+        assertEquals(updatedProduct.getPrice(), resultingProduct.getPrice());
+    }
+
+    @Test
+    public void testUpdateProductNotFound() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> productService.updateProduct(1L, product));
+    }
+
+    @Test
+    public void testDeleteProduct() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        productService.deleteProduct(1L);
+
+        verify(productEntityRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    public void testDeleteProductNotFound() {
+        when(productEntityRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> productService.deleteProduct(1L));
     }
 }

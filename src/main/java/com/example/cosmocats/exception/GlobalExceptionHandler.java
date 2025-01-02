@@ -1,6 +1,11 @@
-package com.example.cosmocats.exeption;
+package com.example.cosmocats.exception;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.NonNull;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -9,12 +14,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -42,10 +50,15 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @Override
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode statusCode,
+            @NonNull WebRequest request
+    ) {
         Map<String, Object> response = new HashMap<>();
         response.put("status", 400);
         response.put("error", "Bad Request");
@@ -64,6 +77,11 @@ public class GlobalExceptionHandler {
         response.put("details", messageBuilder.toString());
         response.put("path", "/api/products");
 
-        return response;
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFoundException(EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 }

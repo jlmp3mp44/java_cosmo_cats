@@ -1,9 +1,7 @@
 package com.example.cosmocats.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.example.cosmocats.TestcontainersConfiguration;
-import com.example.cosmocats.model.Product;
+import com.example.cosmocats.domain.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -30,18 +30,12 @@ public class ProductServiceIntegrationTest {
         productService.getAllProducts().forEach(product -> productService.deleteProduct(product.getId()));
 
         // Add sample products
-        Product product1 = new Product();
-        product1.setName("Product 1");
+        Product product1 = new Product("Product 1", BigDecimal.TEN);
         product1.setDescription("Description 1");
-        product1.setPrice(new BigDecimal("10.00"));
-        product1.setStockQuantity(100);
         productService.createProduct(product1);
 
-        Product product2 = new Product();
-        product2.setName("Product 2");
+        Product product2 = new Product("Product 2", BigDecimal.valueOf(20));
         product2.setDescription("Description 2");
-        product2.setPrice(new BigDecimal("20.00"));
-        product2.setStockQuantity(200);
         productService.createProduct(product2);
     }
 
@@ -54,9 +48,9 @@ public class ProductServiceIntegrationTest {
     @Test
     void testGetProductById() {
         List<Product> products = productService.getAllProducts();
-        Product product = products.get(0);
+        Product product = products.getFirst();
 
-        Optional<Product> fetchedProduct = productService.getProduct(product.getId());
+        Optional<Product> fetchedProduct = productService.findById(product.getId());
         assertTrue(fetchedProduct.isPresent());
         assertEquals(product.getName(), fetchedProduct.get().getName());
     }
@@ -64,11 +58,8 @@ public class ProductServiceIntegrationTest {
     @Test
     @Rollback
     void testCreateProduct() {
-        Product newProduct = new Product();
-        newProduct.setName("New Product");
+        Product newProduct = new Product("New Product", BigDecimal.valueOf(15));
         newProduct.setDescription("New Description");
-        newProduct.setPrice(new BigDecimal("15.00"));
-        newProduct.setStockQuantity(50);
 
         Product createdProduct = productService.createProduct(newProduct);
         assertNotNull(createdProduct.getId());
@@ -94,10 +85,9 @@ public class ProductServiceIntegrationTest {
     @Rollback
     void testDeleteProduct() {
         List<Product> products = productService.getAllProducts();
-        Product product = products.get(0);
+        Product product = products.getFirst();
 
-        boolean result = productService.deleteProduct(product.getId());
-        assertTrue(result);
+        productService.deleteProduct(product.getId());
 
         List<Product> remainingProducts = productService.getAllProducts();
         assertEquals(1, remainingProducts.size());
@@ -105,35 +95,8 @@ public class ProductServiceIntegrationTest {
 
     @Test
     void testGetProductsBelowPrice() {
-        List<Product> productsBelowPrice = productService.getProductsBelowPrice(new BigDecimal("15.00"));
+        List<Product> productsBelowPrice = productService.findProductsWithPriceBellow(new BigDecimal("15.00"));
         assertEquals(1, productsBelowPrice.size());
         assertEquals("Product 1", productsBelowPrice.get(0).getName());
-    }
-
-    @Test
-    void testUpdateStock() {
-        List<Product> products = productService.getAllProducts();
-        Product product = products.get(0);
-
-        Product updatedProduct = productService.updateStock(product.getId(), 500);
-        assertEquals(500, updatedProduct.getStockQuantity());
-    }
-
-    @Test
-    void testGetProductDetails() {
-        List<Product> products = productService.getAllProducts();
-        Product product = products.get(0);
-
-        String details = productService.getProductDetails(product.getId());
-        assertTrue(details.contains(product.getName()));
-        assertTrue(details.contains(product.getDescription()));
-        assertTrue(details.contains(product.getPrice().toString()));
-        assertTrue(details.contains(String.valueOf(product.getStockQuantity())));
-    }
-
-    @Test
-    void testGetServiceStatus() {
-        String status = productService.getServiceStatus();
-        assertEquals("Product service is operational", status);
     }
 }

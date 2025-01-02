@@ -2,7 +2,7 @@ package com.example.cosmocats.featuretoggle;
 
 import com.example.cosmocats.featuretoggle.exception.FeatureNotAvailableException;
 import com.example.cosmocats.featuretoggle.service.FeatureToggleService;
-import com.example.cosmocats.model.Product;
+import com.example.cosmocats.domain.Product;
 import com.example.cosmocats.service.ProductService;
 import com.example.cosmocats.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,18 +34,15 @@ class FeatureToggleTest {
 
     @BeforeEach
     void setUp() {
-        testProduct = new Product();
+        testProduct = new Product("Test Product", BigDecimal.valueOf(99.99));
         testProduct.setId(1L);
-        testProduct.setName("Test Product");
-        testProduct.setPrice(BigDecimal.valueOf(99.99));
-        testProduct.setStockQuantity(10);
     }
 
     @Test
     void whenProductsFeatureEnabled_ShouldAllowBasicOperations() {
         // Arrange
         when(featureToggleService.isProductsEnabled()).thenReturn(true);
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        when(productRepository.create(any(Product.class))).thenReturn(testProduct);
 
         // Act & Assert
         assertDoesNotThrow(() -> productService.createProduct(testProduct));
@@ -72,9 +69,7 @@ class FeatureToggleTest {
 
         // Act & Assert
         assertThrows(FeatureNotAvailableException.class, 
-            () -> productService.getProductDetails(1L));
-        assertThrows(FeatureNotAvailableException.class, 
-            () -> productService.getProductsBelowPrice(BigDecimal.TEN));
+            () -> productService.findProductsWithPriceBellow(BigDecimal.TEN));
     }
 
     @Test
@@ -85,14 +80,6 @@ class FeatureToggleTest {
 
         // Act & Assert
         assertDoesNotThrow(() -> productService.getAllProducts());
-        assertDoesNotThrow(() -> productService.getProductDetails(1L));
-        assertDoesNotThrow(() -> productService.getProductsBelowPrice(BigDecimal.TEN));
-    }
-
-    @Test
-    void serviceStatus_ShouldAlwaysBeAvailable() {
-        // Act & Assert
-        assertDoesNotThrow(() -> productService.getServiceStatus());
-        assertNotNull(productService.getServiceStatus());
+        assertDoesNotThrow(() -> productService.findProductsWithPriceBellow(BigDecimal.TEN));
     }
 }
