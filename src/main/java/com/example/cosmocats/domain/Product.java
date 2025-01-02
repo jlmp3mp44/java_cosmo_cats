@@ -1,24 +1,28 @@
 package com.example.cosmocats.domain;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
 
 import java.math.BigDecimal;
 
-import lombok.*;
-
-@Data
-@Builder
-@Table(name = "products")
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@Getter
+@Setter
+@Builder(toBuilder = true)
+@RequiredArgsConstructor
 @AllArgsConstructor
 public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String name;
-    String description;
-    BigDecimal price;
-    @ManyToOne
-    Category category;
+
+    private Long id;
+    @NonNull
+    @NotBlank
+    private String name;
+    private String description;
+    @NonNull
+    @NotNull
+    @PositiveOrZero
+    private BigDecimal price;
+    private Category category;
 }
 
