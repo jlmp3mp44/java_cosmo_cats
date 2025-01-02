@@ -1,20 +1,22 @@
 package com.example.cosmocats.dto.order;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
-import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
-@Value
+import java.util.List;
+
 @Builder
 @Jacksonized
-public class OrderRequestDTO {
-  @NotNull(message = "Entries cannot be null")
-  List<OrderDTO> entries;
-
+public record OrderRequestDTO(
+  @NotEmpty(message = "Entries cannot be empty")
+  List<@Valid @NotNull OrderDTO> entries,
   @NotNull(message = "Total price cannot be null")
-  @Min(value = 0)
-  Double totalPrice;
+  @PositiveOrZero
+  Double totalPrice
+) {
+
 }

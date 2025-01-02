@@ -1,5 +1,4 @@
-package com.example.cosmocats.service.exception;
-
+package com.example.cosmocats.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

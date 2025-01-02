@@ -1,74 +1,52 @@
 package com.example.cosmocats.service.implementation;
 
-import com.example.cosmocats.dto.ProductDTO;
 import com.example.cosmocats.domain.Product;
-import com.example.cosmocats.service.exception.ResourceNotFoundException;
 import com.example.cosmocats.repository.ProductRepository;
 import com.example.cosmocats.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.cosmocats.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Validated
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = mapToEntity(productDTO);
-        Product savedProduct = productRepository.save(product);
-        return mapToDTO(savedProduct);
+    public Product createProduct(@Validated Product product) {
+        return productRepository.create(product);
     }
 
     @Override
-    public List<ProductDTO> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return products.stream().map(this::mapToDTO).collect(Collectors.toList());
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
     @Override
-    public ProductDTO getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return mapToDTO(product);
+    public Optional<Product> findById(Long id) {
+        return productRepository.findById(id);
     }
 
     @Override
-    public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        Product existingProduct = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-
-        existingProduct.setName(productDTO.getName());
-        existingProduct.setPrice(productDTO.getPrice());;
-
-        Product updatedProduct = productRepository.save(existingProduct);
-        return mapToDTO(updatedProduct);
+    public Product updateProduct(Long id, @Validated Product product) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product with id " + id + " not found");
+        }
+        return productRepository.update(id, product);
     }
 
     @Override
-    public boolean deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        productRepository.delete(product);  // Використовуємо метод delete з JpaRepository
-        return true;
+    public void deleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product with id " + id + " not found");
+        }
+        productRepository.deleteById(id);
     }
 
-    private ProductDTO mapToDTO(Product product) {
-        return ProductDTO.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .price(product.getPrice())
-                .build();
-    }
-
-    private Product mapToEntity(ProductDTO productDTO) {
-        return Product.builder()
-                .name(productDTO.getName())
-                .price(productDTO.getPrice())
-                .build();
-    }
 }

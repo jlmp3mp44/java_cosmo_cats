@@ -1,11 +1,10 @@
 package com.example.cosmocats.domain;
 
-import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Value;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import lombok.*;
 
 
 @Builder(toBuilder = true)

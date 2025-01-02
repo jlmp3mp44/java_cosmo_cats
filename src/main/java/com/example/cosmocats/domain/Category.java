@@ -1,6 +1,5 @@
 package com.example.cosmocats.domain;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 
