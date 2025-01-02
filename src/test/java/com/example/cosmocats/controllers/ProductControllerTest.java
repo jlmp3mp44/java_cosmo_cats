@@ -28,14 +28,12 @@ public class ProductControllerTest {
 
     private static final ProductDTO VALID_PRODUCT_DTO = ProductDTO.builder()
         .name("Cosmic Cat Food")
-        .description("Space-grade nutrition for your feline friend")
         .price(BigDecimal.valueOf(29.99))
         .categoryId(1L)
         .build();
 
     private static final ProductDTO INVALID_PRODUCT_DTO = ProductDTO.builder()
-        .name("Regular Name") // Валідне ім'я, але інші обов'язкові поля відсутні
-        .description("Test Description")
+        .name("Regular Name")
         .price(BigDecimal.valueOf(-10.00)) // Негативна ціна
         .build();
 

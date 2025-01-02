@@ -26,9 +26,10 @@ dependencies {
 
 	// Testing dependencies
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
-	runtimeOnly 'org.postgresql:postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+	testImplementation 'org.mockito:mockito-core:3.8.0'
 
 	// Lombok for reducing boilerplate code
 	compileOnly 'org.projectlombok:lombok'

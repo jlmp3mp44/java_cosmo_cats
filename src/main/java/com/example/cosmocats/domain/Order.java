@@ -8,16 +8,10 @@ import java.util.List;
 import lombok.*;
 
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(toBuilder = true)
-@Table(name = "orders")
+@Value
 public class Order {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @OneToMany
     List<Product> products;
     BigDecimal totalPrice;
     String status;

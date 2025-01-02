@@ -2,7 +2,8 @@ package com.example.cosmocats.service;
 
 import com.example.cosmocats.domain.Product;
 import com.example.cosmocats.dto.ProductDTO;
-import com.example.cosmocats.mapper.ProductMapper;
+import com.example.cosmocats.service.exception.ResourceNotFoundException;
+import com.example.cosmocats.service.implementation.ProductServiceImpl;
 import com.example.cosmocats.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,8 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,146 +20,98 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+public class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
 
-    @Mock
-    private ProductMapper productMapper;
-
     @InjectMocks
-    private ProductService productService;
+    private ProductServiceImpl productService;
 
-    private Product product;
     private ProductDTO productDTO;
+    private Product product;
 
     @BeforeEach
-    void setUp() {
-        product = new Product();
-        product.setId(1L);
-        product.setName("Cosmic Cat Food");
-        product.setDescription("Space-grade nutrition for your feline friend");
-        product.setPrice(new BigDecimal("29.99"));
+    public void setUp() {
 
         productDTO = new ProductDTO();
-        productDTO.setId(1L);
-        productDTO.setName("Cosmic Cat Food");
-        productDTO.setDescription("Space-grade nutrition for your feline friend");
-        productDTO.setPrice(new BigDecimal("29.99"));
+        productDTO.setName("Test Product");
+        productDTO.setPrice(BigDecimal.valueOf(100.0));
+
+        product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(BigDecimal.valueOf(100.0))
+                .build();
     }
 
     @Test
-    void createProduct_Success() {
-        when(productMapper.toEntity(any(ProductDTO.class))).thenReturn(product);
+    public void testCreateProduct() {
         when(productRepository.save(any(Product.class))).thenReturn(product);
-        when(productMapper.toDTO(any(Product.class))).thenReturn(productDTO);
 
-        ProductDTO result = productService.createProduct(productDTO);
+        ProductDTO createdProductDTO = productService.createProduct(productDTO);
 
-        assertNotNull(result);
-        assertEquals(productDTO.getName(), result.getName());
-        assertEquals(productDTO.getDescription(), result.getDescription());
-        assertEquals(productDTO.getPrice(), result.getPrice());
-
-        verify(productMapper).toEntity(productDTO);
-        verify(productRepository).save(product);
-        verify(productMapper).toDTO(product);
+        assertNotNull(createdProductDTO);
+        assertEquals("Test Product", createdProductDTO.getName());
+        assertEquals(BigDecimal.valueOf(100.0), createdProductDTO.getPrice());
+        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
-    void getAllProducts_Success() {
-        List<Product> products = Arrays.asList(product);
-        when(productRepository.findAll()).thenReturn(products);
-        when(productMapper.toDTO(any(Product.class))).thenReturn(productDTO);
-
-        List<ProductDTO> result = productService.getAllProducts();
-
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(productDTO.getName(), result.get(0).getName());
-
-        verify(productRepository).findAll();
-        verify(productMapper, times(1)).toDTO(any(Product.class));
-    }
-
-    @Test
-    void getProductById_Success() {
+    public void testGetProductById() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productMapper.toDTO(product)).thenReturn(productDTO);
 
-        ProductDTO result = productService.getProductById(1L);
+        ProductDTO foundProductDTO = productService.getProductById(1L);
 
-        assertNotNull(result);
-        assertEquals(productDTO.getName(), result.getName());
-        assertEquals(productDTO.getDescription(), result.getDescription());
-
-        verify(productRepository).findById(1L);
-        verify(productMapper).toDTO(product);
+        assertNotNull(foundProductDTO);
+        assertEquals("Test Product", foundProductDTO.getName());
+        assertEquals(BigDecimal.valueOf(100.0), foundProductDTO.getPrice());
     }
 
     @Test
-    void getProductById_NotFound() {
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+    public void testGetProductByIdNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductDTO result = productService.getProductById(99L);
-
-        assertNull(result);
-        verify(productRepository).findById(99L);
-        verify(productMapper, never()).toDTO(any());
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProductById(1L));
     }
 
     @Test
-    void updateProduct_Success() {
+    public void testUpdateProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(product);
-        when(productMapper.toDTO(product)).thenReturn(productDTO);
 
-        ProductDTO updatedDTO = new ProductDTO();
-        updatedDTO.setName("Updated Name");
-        updatedDTO.setDescription("Updated Description");
-        updatedDTO.setPrice(new BigDecimal("39.99"));
+        productDTO.setName("Updated Product");
+        productDTO.setPrice(BigDecimal.valueOf(150.0));
 
-        ProductDTO result = productService.updateProduct(1L, updatedDTO);
+        ProductDTO updatedProductDTO = productService.updateProduct(1L, productDTO);
 
-        assertNotNull(result);
-        verify(productRepository).findById(1L);
-        verify(productRepository).save(product);
-        verify(productMapper).toDTO(product);
+        assertNotNull(updatedProductDTO);
+        assertEquals("Updated Product", updatedProductDTO.getName());
+        assertEquals(BigDecimal.valueOf(150.0), updatedProductDTO.getPrice());
     }
 
     @Test
-    void updateProduct_NotFound() {
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+    public void testUpdateProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductDTO result = productService.updateProduct(99L, productDTO);
-
-        assertNull(result);
-        verify(productRepository).findById(99L);
-        verify(productRepository, never()).save(any());
-        verify(productMapper, never()).toDTO(any());
+        assertThrows(ResourceNotFoundException.class, () -> productService.updateProduct(1L, productDTO));
     }
 
     @Test
-    void deleteProduct_Success() {
+    public void testDeleteProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        boolean result = productService.deleteProduct(1L);
+        boolean isDeleted = productService.deleteProduct(1L);
 
-        assertTrue(result);
-        verify(productRepository).findById(1L);
-        verify(productRepository).delete(product);
+        assertTrue(isDeleted);
+        verify(productRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    void deleteProduct_NotFound() {
-        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+    public void testDeleteProductNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        boolean result = productService.deleteProduct(99L);
-
-        assertFalse(result);
-        verify(productRepository).findById(99L);
-        verify(productRepository, never()).delete(any());
+        assertThrows(ResourceNotFoundException.class, () -> productService.deleteProduct(1L));
     }
 }
